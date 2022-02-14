@@ -1,0 +1,67 @@
+-- creating table
+CREATE TABLE students (
+  id INTEGER not null,
+  name TEXT NOT NULL,
+  shop_date date,
+  amount INTEGER
+);
+-- -- insert some values
+INSERT INTO students VALUES (1, 'Ryan', '2022-01-01', 100);
+INSERT INTO students VALUES (1, 'Ryan', '2022-01-02', 300);
+INSERT INTO students VALUES (1, 'Ryan', '2022-01-03', 500);
+INSERT INTO students VALUES (1, 'Ryan', '2022-01-04', 700);
+INSERT INTO students VALUES (1, 'Ryan', '2022-01-05', 900);
+INSERT INTO students VALUES (1, 'Ryan', '2022-01-06', 1100);
+INSERT INTO students VALUES (1, 'Ryan', '2022-01-07', 100);
+INSERT INTO students VALUES (2, 'Rvb', '2022-01-02', 300);
+INSERT INTO students VALUES (2, 'Rvb', '2022-01-03', 500);
+INSERT INTO students VALUES (2, 'Rvb', '2022-01-04', 700);
+INSERT INTO students VALUES (2, 'Rvb', '2022-01-05', 800);
+INSERT INTO students VALUES (2, 'Rvb', '2022-01-06', 1000);
+INSERT INTO students VALUES (3, 'Ry', '2022-01-10', 100);
+INSERT INTO students VALUES (3, 'Ry', '2022-01-11', 300);
+INSERT INTO students VALUES (3, 'Ry', '2022-01-12', 500);
+INSERT INTO students VALUES (3, 'Ry', '2022-01-14', 700);
+INSERT INTO students VALUES (3, 'Ry', '2022-01-15', 900);
+INSERT INTO students VALUES (4, 'Vk', '2022-01-16', 300);
+INSERT INTO students VALUES (4, 'Vk', '2022-01-21', 200);
+INSERT INTO students VALUES (4, 'Vk', '2022-01-22', 300);
+INSERT INTO students VALUES (4, 'Vk', '2022-01-23', 500);
+INSERT INTO students VALUES (4, 'Vk', '2022-01-24', 700);
+INSERT INTO students VALUES (4, 'Vk', '2022-01-25', 900);
+INSERT INTO students VALUES (4, 'Vk', '2022-01-26', 1100);
+INSERT INTO students VALUES (5, 'Vk', '2022-01-22', 300);
+INSERT INTO students VALUES (5, 'Vk', '2022-01-23', 500);
+INSERT INTO students VALUES (5, 'Vk', '2022-01-24', 700);
+INSERT INTO students VALUES (5, 'Vk', '2022-01-25', 900);
+
+-- -- Query
+with diff_table as (
+  select id, shop_date, amount,
+  amount - lag(amount) over(partition by id order by shop_date) as diff 
+  from students), 
+  row_num_table as (
+    select diff_table.*, 
+    row_number() over(partition by id order by shop_date) as rownum 
+    from diff_table 
+    where diff >=200 or diff = null
+    ), 
+    grouping_table as (
+      select row_num_table.*, 
+      DATEADD(DAY, -1*rownum, shop_date) AS start_date 
+      FROM row_num_table;
+    ), 
+    final_table as (
+      SELECT 
+      id,
+      MIN(shop_date) AS start_dt, 
+      MAX(shop_date) as end_dt, 
+      DATEDIFF(day, MIN(shop_date), MAX(shop_date)) + 1 AS seq_len 
+      FROM grouping_table 
+      GROUP BY id, start_date 
+      ORDER BY id, start_dt
+      ) 
+      select 
+      distinct(id) 
+      from final_table 
+      where seq_len>=4;

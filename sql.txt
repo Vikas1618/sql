@@ -59,7 +59,6 @@ with diff_table as (
       DATEDIFF(day, MIN(shop_date), MAX(shop_date)) + 1 AS seq_len 
       FROM grouping_table 
       GROUP BY id, start_date 
-      ORDER BY id, start_dt
       ) 
       select 
       distinct(id) 
